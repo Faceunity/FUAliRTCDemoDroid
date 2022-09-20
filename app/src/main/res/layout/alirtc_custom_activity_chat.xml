@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/chart_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:id="@+id/rl_title"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:background="@color/black_alpha_5">
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:text="@string/alirtc_mode"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/title_size" />
+
+        <TextView
+            android:id="@+id/tv_fps"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/title_size" />
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/rl_title"
+        android:orientation="vertical">
+
+        <android.opengl.GLSurfaceView
+            android:id="@+id/gl_local_view"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/chart_content_userlist"
+        android:layout_width="match_parent"
+        android:layout_height="360dp"
+        android:layout_below="@+id/rl_title"
+        android:layout_marginTop="16dp" />
+
+
+
+    <LinearLayout
+        android:id="@+id/ll_bottom_function"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#FF212129"
+        android:gravity="center"
+        android:layout_alignParentBottom="true">
+
+        <ImageView
+            android:id="@+id/iv_switch_camera"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="40dp"
+            android:onClick="onClick"
+            android:src="@mipmap/ic_camera_flip"/>
+
+        <ImageView
+            android:id="@+id/iv_leave"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="40dp"
+            android:onClick="onClick"
+            android:src="@drawable/selector_meeting_leave" />
+
+        <ImageView
+            android:id="@+id/iv_audio"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="50dp"
+            android:onClick="onClick"
+            android:src="@drawable/selector_meeting_unmute"/>
+
+    </LinearLayout>
+
+
+    <com.faceunity.nama.ui.FaceUnityView
+        android:id="@+id/faceunity_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/ll_bottom_function"
+        android:layout_centerHorizontal="true"/>
+
+
+    <TextView
+        android:id="@+id/tv_detect_face"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:textColor="@android:color/white"
+        android:textSize="@dimen/title_size" />
+
+</RelativeLayout>
