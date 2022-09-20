@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/login_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/ll_title"
+        android:layout_width="match_parent"
+        android:layout_height="?actionBarSize"
+        android:background="@color/holo_light_gray"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/alirtc_title"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/title_size" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <RadioGroup
+            android:id="@+id/rg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:text="选择UserId"
+                android:textColor="@android:color/black"
+                android:textSize="@dimen/title_size" />
+
+            <RadioButton
+                android:id="@+id/rbTest"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:checked="true"
+                android:text="test" />
+
+            <RadioButton
+                android:id="@+id/rbTest2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:text="test2" />
+
+        </RadioGroup>
+
+        <LinearLayout
+            android:id="@+id/ll_room_id"
+            android:layout_width="@dimen/x300"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="房间号: "
+                android:textColor="@android:color/black"
+                android:textSize="@dimen/title_size" />
+
+            <EditText
+                android:id="@+id/et_room_id"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text=""
+                android:textColor="#000000" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/bt_AuthInfo_ali"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dimen_44"
+            android:layout_marginTop="@dimen/dimen_15"
+            android:background="@drawable/alirtc_bg_enter_shape"
+            android:onClick="onClick"
+            android:text="阿里采集视频"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/labels_text_size" />
+
+        <Button
+            android:id="@+id/bt_AuthInfo_custom"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dimen_44"
+            android:layout_marginTop="@dimen/dimen_15"
+            android:background="@drawable/alirtc_bg_enter_shape"
+            android:onClick="onClick"
+            android:text="自采集视频"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/labels_text_size" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_sdk_version"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="20dp"
+        android:textColor="@android:color/black"
+        android:textSize="@dimen/labels_text_size" />
+
+</RelativeLayout>
