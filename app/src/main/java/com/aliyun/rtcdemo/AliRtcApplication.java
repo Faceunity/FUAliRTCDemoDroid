@@ -1,11 +1,9 @@
 package com.aliyun.rtcdemo;
 
-import android.app.Application;
 import android.content.Context;
 import android.support.multidex.MultiDexApplication;
 
-import com.faceunity.FUConfig;
-import com.faceunity.nama.FURenderer;
+import com.faceunity.nama.FUConfig;
 import com.faceunity.nama.utils.FuDeviceUtils;
 import com.squareup.leakcanary.LeakCanary;
 import com.squareup.leakcanary.RefWatcher;
@@ -38,7 +36,7 @@ public class AliRtcApplication extends MultiDexApplication {
             return;
         }
 
-        FUConfig.DEVICE_LEVEL = FuDeviceUtils.judgeDeviceLevel(this);
+        FUConfig.DEVICE_LEVEL = FuDeviceUtils.judgeDeviceLevelGPU();
         refWatcher = LeakCanary.install(this);
         // Normal app init code...
     }
