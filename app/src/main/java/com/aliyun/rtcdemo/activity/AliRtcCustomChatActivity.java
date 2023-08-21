@@ -17,6 +17,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -28,6 +29,7 @@ import com.alivc.rtc.AliRtcEngine;
 import com.alivc.rtc.AliRtcEngineEventListener;
 import com.alivc.rtc.AliRtcEngineNotify;
 import com.alivc.rtc.AliRtcRemoteUserInfo;
+import com.aliyun.rtcdemo.PreferenceUtil;
 import com.aliyun.rtcdemo.R;
 import com.aliyun.rtcdemo.UserInfo;
 import com.aliyun.rtcdemo.adapter.BaseRecyclerViewAdapter;
@@ -44,10 +46,13 @@ import com.faceunity.core.enumeration.FUTransformMatrixEnum;
 import com.faceunity.core.faceunity.FUAIKit;
 import com.faceunity.core.faceunity.FURenderKit;
 import com.faceunity.core.listener.OnGlRendererListener;
+import com.faceunity.core.model.facebeauty.FaceBeautyBlurTypeEnum;
 import com.faceunity.core.renderer.CameraRenderer;
+import com.faceunity.nama.FUConfig;
 import com.faceunity.nama.FURenderer;
 import com.faceunity.nama.data.FaceUnityDataFactory;
 import com.faceunity.nama.ui.FaceUnityView;
+import com.faceunity.nama.utils.FuDeviceUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
@@ -132,8 +137,6 @@ public class AliRtcCustomChatActivity extends AppCompatActivity {
     }
 
     private void initView() {
-        // 初始化 FaceUnity 美颜 SDK
-        FURenderer.getInstance().setup(this);
 
         mLocalView = findViewById(R.id.gl_local_view);
         mTvFPS = findViewById(R.id.tv_fps);
@@ -152,9 +155,21 @@ public class AliRtcCustomChatActivity extends AppCompatActivity {
         chartUserListView.setAdapter(mUserListAdapter);
         mUserListAdapter.setOnSubConfigChangeListener(mOnSubConfigChangeListener);
 
+        String isOpen = PreferenceUtil.getString(this, PreferenceUtil.KEY_FACEUNITY_ISON);
+        if (TextUtils.isEmpty(isOpen) || PreferenceUtil.OFF.equals(isOpen)) {
+            enableFU = false;
+        } else {
+            enableFU = true;
+        }
         FaceUnityView beautyControlView = findViewById(R.id.faceunity_view);
-        mFaceUnityDataFactory = new FaceUnityDataFactory(0);
-        beautyControlView.bindDataFactory(mFaceUnityDataFactory);
+        if (enableFU) {
+            // 初始化 FaceUnity 美颜 SDK
+            FURenderer.getInstance().setup(this);
+            mFaceUnityDataFactory = new FaceUnityDataFactory(-1);
+            beautyControlView.bindDataFactory(mFaceUnityDataFactory);
+        }else {
+            beautyControlView.setVisibility(View.GONE);
+        }
     }
 
     /* CameraRenderer 回调*/
@@ -169,10 +184,29 @@ public class AliRtcCustomChatActivity extends AppCompatActivity {
         private long mLastOneHundredFrameTimeStamp = 0;
         private long mOneHundredFrameFUTime = 0;
 
+        private void cheekFaceNum() {
+            //根据有无人脸 + 设备性能 判断开启的磨皮类型
+            float faceProcessorGetConfidenceScore = FUAIKit.getInstance().getFaceProcessorGetConfidenceScore(0);
+            if (faceProcessorGetConfidenceScore >= 0.95) {
+                //高端手机并且检测到人脸开启均匀磨皮，人脸点位质
+                if (FURenderKit.getInstance().getFaceBeauty() != null && FURenderKit.getInstance().getFaceBeauty().getBlurType() != FaceBeautyBlurTypeEnum.EquallySkin) {
+                    FURenderKit.getInstance().getFaceBeauty().setBlurType(FaceBeautyBlurTypeEnum.EquallySkin);
+                    FURenderKit.getInstance().getFaceBeauty().setEnableBlurUseMask(true);
+                }
+            } else {
+                if (FURenderKit.getInstance().getFaceBeauty() != null && FURenderKit.getInstance().getFaceBeauty().getBlurType() != FaceBeautyBlurTypeEnum.FineSkin) {
+                    FURenderKit.getInstance().getFaceBeauty().setBlurType(FaceBeautyBlurTypeEnum.FineSkin);
+                    FURenderKit.getInstance().getFaceBeauty().setEnableBlurUseMask(false);
+                }
+            }
+        }
+
         @Override
         public void onSurfaceCreated() {
-            mFaceUnityDataFactory.bindCurrentRenderer();
-            initCsvUtil(AliRtcCustomChatActivity.this);
+            if (enableFU) {
+                initCsvUtil(AliRtcCustomChatActivity.this);
+                mFaceUnityDataFactory.bindCurrentRenderer();
+            }
         }
 
         @Override
@@ -183,6 +217,10 @@ public class AliRtcCustomChatActivity extends AppCompatActivity {
         public void onRenderBefore(FURenderInputData inputData) {
             mFuCallStartTime = System.nanoTime();
             inputData.getRenderConfig().setNeedBufferReturn(true);
+
+            if (FUConfig.DEVICE_LEVEL > FuDeviceUtils.DEVICE_LEVEL_MID) {
+                cheekFaceNum();
+            }
         }
 
 
@@ -218,8 +256,10 @@ public class AliRtcCustomChatActivity extends AppCompatActivity {
 
         @Override
         public void onDrawFrameAfter() {
-            benchmarkFPS();
-            trackStatus();
+            if (enableFU) {
+                benchmarkFPS();
+                trackStatus();
+            }
         }
 
         @Override
@@ -327,6 +367,9 @@ public class AliRtcCustomChatActivity extends AppCompatActivity {
             mAliRtcEngine.muteLocalMic(true, AliRtcEngine.AliRtcMuteLocalAudioMode.AliRtcMuteAudioModeDefault);
             mAliRtcEngine.setExternalVideoSource(true, false, AliRtcEngine.AliRtcVideoTrack.AliRtcVideoTrackCamera, AliRtcEngine.AliRtcRenderMode.AliRtcRenderModeAuto);
             mCameraRenderer = new CameraRenderer(mLocalView, new FUCameraConfig(), mOnGlRendererListener);
+            if (!enableFU) {
+                mCameraRenderer.setFURenderSwitch(false);
+            }
             // 初始化本地视图
             mLocalView.setKeepScreenOn(true);
             //加入频道

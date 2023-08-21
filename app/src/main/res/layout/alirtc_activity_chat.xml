@@ -97,4 +97,14 @@
         android:layout_above="@id/ll_bottom_function"
         android:layout_centerHorizontal="true"/>
 
+    <TextView
+        android:visibility="invisible"
+        android:id="@+id/iv_face_detect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:text="@string/fu_base_is_tracking_text"
+        android:textColor="@color/colorWhite"
+        android:textSize="17sp"/>
+
 </RelativeLayout>

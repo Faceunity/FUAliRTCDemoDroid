@@ -47,12 +47,16 @@ import com.faceunity.core.enumeration.CameraFacingEnum;
 import com.faceunity.core.enumeration.FUAIProcessorEnum;
 import com.faceunity.core.enumeration.FUInputTextureEnum;
 import com.faceunity.core.enumeration.FUTransformMatrixEnum;
+import com.faceunity.core.faceunity.FUAIKit;
 import com.faceunity.core.faceunity.FURenderKit;
+import com.faceunity.core.model.facebeauty.FaceBeautyBlurTypeEnum;
 import com.faceunity.core.utils.CameraUtils;
+import com.faceunity.nama.FUConfig;
 import com.faceunity.nama.FURenderer;
 import com.faceunity.nama.data.FaceUnityDataFactory;
 import com.faceunity.nama.listener.FURendererListener;
 import com.faceunity.nama.ui.FaceUnityView;
+import com.faceunity.nama.utils.FuDeviceUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -93,6 +97,7 @@ public class AliRtcChatActivity extends AppCompatActivity implements SensorEvent
     private ImageView mIvAudio;
     private TextView mTvFPS;
     private ChartUserAdapter mUserListAdapter;
+    private TextView mTrackingText;
     private FURenderer mFURenderer;
     private SensorManager mSensorManager;
     private String mUserId;
@@ -175,6 +180,7 @@ public class AliRtcChatActivity extends AppCompatActivity implements SensorEvent
         mUserListAdapter.setOnSubConfigChangeListener(mOnSubConfigChangeListener);
 
         FaceUnityView beautyControlView = findViewById(R.id.faceunity_view);
+        mTrackingText = findViewById(R.id.iv_face_detect);
         if (enableFU) {
             // 初始化 FaceUnity 美颜 SDK
             FURenderer.getInstance().setup(this);
@@ -190,7 +196,7 @@ public class AliRtcChatActivity extends AppCompatActivity implements SensorEvent
             mFURenderer.setInputOrientation(CameraUtils.INSTANCE.getCameraOrientation(cameraFacing));
             mFURenderer.setMarkFPSEnable(true);
 
-            mFaceUnityDataFactory = new FaceUnityDataFactory(0);
+            mFaceUnityDataFactory = new FaceUnityDataFactory(-1);
             beautyControlView.bindDataFactory(mFaceUnityDataFactory);
             mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
             Sensor sensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -210,6 +216,10 @@ public class AliRtcChatActivity extends AppCompatActivity implements SensorEvent
         @Override
         public void onTrackStatusChanged(FUAIProcessorEnum type, int status) {
             Log.e(TAG, "onTrackStatusChanged: 人脸数: " + status);
+            runOnUiThread(() -> {
+                mTrackingText.setText(type == FUAIProcessorEnum.FACE_PROCESSOR ? R.string.toast_not_detect_face : R.string.toast_not_detect_body);
+                mTrackingText.setVisibility(status > 0 ? View.INVISIBLE : View.VISIBLE);
+            });
         }
 
         @Override
@@ -243,7 +253,6 @@ public class AliRtcChatActivity extends AppCompatActivity implements SensorEvent
                     mFURenderer.setInputTextureMatrix((cameraType == Camera.CameraInfo.CAMERA_FACING_FRONT ? FUTransformMatrixEnum.CCROT0 : FUTransformMatrixEnum.CCROT0_FLIPVERTICAL));
                     mFURenderer.setInputBufferMatrix((cameraType == Camera.CameraInfo.CAMERA_FACING_FRONT ? FUTransformMatrixEnum.CCROT0 : FUTransformMatrixEnum.CCROT0_FLIPVERTICAL));
                     mFURenderer.setOutputMatrix((cameraType == Camera.CameraInfo.CAMERA_FACING_FRONT ? FUTransformMatrixEnum.CCROT0_FLIPVERTICAL : FUTransformMatrixEnum.CCROT0));
-
                     mSkipFrames = 2;
                 }
                 break;
@@ -303,6 +312,25 @@ public class AliRtcChatActivity extends AppCompatActivity implements SensorEvent
 
     private void registerTexturePreObserver() {
         mAliRtcEngine.registerLocalVideoTextureObserver(new AliRtcEngine.AliRtcTextureObserver() {
+
+            private void cheekFaceNum() {
+                //根据有无人脸 + 设备性能 判断开启的磨皮类型
+                float faceProcessorGetConfidenceScore = FUAIKit.getInstance().getFaceProcessorGetConfidenceScore(0);
+                if (faceProcessorGetConfidenceScore >= 0.95) {
+                    //高端手机并且检测到人脸开启均匀磨皮，人脸点位质
+                    if (FURenderKit.getInstance().getFaceBeauty() != null && FURenderKit.getInstance().getFaceBeauty().getBlurType() != FaceBeautyBlurTypeEnum.EquallySkin) {
+                        FURenderKit.getInstance().getFaceBeauty().setBlurType(FaceBeautyBlurTypeEnum.EquallySkin);
+                        FURenderKit.getInstance().getFaceBeauty().setEnableBlurUseMask(true);
+                    }
+                } else {
+                    if (FURenderKit.getInstance().getFaceBeauty() != null && FURenderKit.getInstance().getFaceBeauty().getBlurType() != FaceBeautyBlurTypeEnum.FineSkin) {
+                        FURenderKit.getInstance().getFaceBeauty().setBlurType(FaceBeautyBlurTypeEnum.FineSkin);
+                        FURenderKit.getInstance().getFaceBeauty().setEnableBlurUseMask(false);
+                    }
+                }
+            }
+
+
             @Override
             public void onTextureCreate(long l) {
                 Log.i(TAG, "onTextureCreate uid:" + Thread.currentThread().getId());
@@ -315,6 +343,9 @@ public class AliRtcChatActivity extends AppCompatActivity implements SensorEvent
                 if (mSkipFrames > 0) {
                     mSkipFrames--;
                     FURenderKit.getInstance().clearCacheResource();
+                }
+                if (FUConfig.DEVICE_LEVEL > FuDeviceUtils.DEVICE_LEVEL_MID) {
+                    cheekFaceNum();
                 }
                 return mFURenderer.onDrawFrameSingleInput(texId, width, height);
             }
